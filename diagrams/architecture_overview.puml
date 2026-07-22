@@ -1,0 +1,40 @@
+@startuml
+!define RECT rectangle
+
+title DPVL System Architecture Overview
+
+package "Control Plane" as CP {
+  [BGP Speaker] as BGP
+  [SDN Controller] as SDN
+  [Segment Routing Policy] as SR
+}
+
+package "Dynamic Path Verification Layer" as DPVL {
+  [Path Discovery Module] as PDM
+  [Verification Engine] as VE
+  [Anomaly Response Engine] as ARE
+  database "State & Policy Store" as STORE
+  PDM --> STORE
+  VE --> STORE
+  ARE --> STORE
+}
+
+package "Forwarding Plane" as FP {
+  component "Router A\n[OPVM]" as R1
+  component "Router B\n[OPVM]" as R2
+  component "Router C\n[OPVM]" as R3
+  R1 --> R2
+  R2 --> R3
+}
+
+package "Management Plane" as MP {
+  [Verification Authority] as VA
+  [Audit Logger] as AL
+}
+
+CP --> DPVL : route updates
+DPVL --> FP : path claims,\nverification tokens
+FP --> MP : audit logs
+MP --> DPVL : aggregated\nverification
+
+@enduml

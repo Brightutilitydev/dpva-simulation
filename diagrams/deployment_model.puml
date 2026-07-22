@@ -1,0 +1,53 @@
+@startuml
+title Deployment Model
+
+rectangle "Verification Authority (VA)\nGlobal Trust Anchor" as VA {
+  [PKI / Certificate Store]
+  [Node Registration]
+  [Audit Coordinator]
+}
+
+package "AS 1" {
+  [DPVL Node A1]
+  [DPVL Node A2]
+  [DPVL Node A3]
+  node "Internal VA Peer" as VA1
+  [DPVL Node A1] --> [DPVL Node A2]
+  [DPVL Node A2] --> [DPVL Node A3]
+  VA1 --> [DPVL Node A1]
+  VA1 --> [DPVL Node A2]
+  VA1 --> [DPVL Node A3]
+}
+
+package "AS 2" {
+  [DPVL Node B1]
+  [DPVL Node B2]
+  node "Internal VA Peer" as VA2
+  [DPVL Node B1] --> [DPVL Node B2]
+  VA2 --> [DPVL Node B1]
+  VA2 --> [DPVL Node B2]
+}
+
+package "AS 3" {
+  [DPVL Node C1]
+  [DPVL Node C2]
+  [DPVL Node C3]
+  [DPVL Node C4]
+  node "Internal VA Peer" as VA3
+  [DPVL Node C1] --> [DPVL Node C2]
+  [DPVL Node C2] --> [DPVL Node C3]
+  [DPVL Node C3] --> [DPVL Node C4]
+  VA3 --> [DPVL Node C1]
+  VA3 --> [DPVL Node C2]
+  VA3 --> [DPVL Node C3]
+  VA3 --> [DPVL Node C4]
+}
+
+[DPVL Node A3] <-up-> [DPVL Node B1] : inter-AS\npath claim
+[DPVL Node B2] <-up-> [DPVL Node C1] : inter-AS\npath claim
+
+VA <--> VA1 : hierarchical\npeering
+VA <--> VA2
+VA <--> VA3
+
+@enduml

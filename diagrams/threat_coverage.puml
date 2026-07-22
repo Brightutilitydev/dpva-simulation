@@ -1,0 +1,39 @@
+@startuml
+title Threat Model Coverage
+
+package Attacks as ATTACKS {
+  usecase "BGP Hijack" as T1
+  usecase "AS Path Forgery" as T2
+  usecase "Man-in-the-Middle" as T3
+  usecase "Packet Injection" as T4
+  usecase "Packet Drop" as T5
+  usecase "Replay Attack" as T6
+  usecase "Collusion" as T7
+  usecase "Routing Loop" as T8
+}
+
+package Mitigations as MITIGATIONS {
+  usecase "Proactive Path\nValidation (PPV)" as M1
+  usecase "On-Path Continuous\nVerification (OPCV)" as M2
+  usecase "Post-Facto\nAudit (PFA)" as M3
+  usecase "Path Claim\nSignatures" as M4
+  usecase "Per-Packet\nNonces" as M5
+}
+
+T1 --> M1
+T1 --> M4
+T2 --> M1
+T2 --> M4
+T3 --> M2
+T3 --> M1
+T4 --> M2
+T4 --> M3
+T5 --> M2
+T5 --> M3
+T6 --> M5
+T6 --> M1
+T7 --> M3
+T7 --> M2
+T8 --> M1
+
+@enduml

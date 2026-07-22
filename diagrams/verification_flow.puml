@@ -1,0 +1,56 @@
+@startuml
+title End-to-End Verification Flow (DPVA)
+
+participant "Source\n(Verification Engine)" as S
+participant "Router R1\n[OPVM]" as R1
+participant "Router R2\n[OPVM]" as R2
+participant "Router R3\n[OPVM]" as R3
+participant "Destination\n(Verification Engine)" as D
+
+== Phase 1: Path Discovery & Claim ==
+S -> S: Compute PathClaim(path=[R1,R2,R3])
+S -> R1: Claim(path_ID, path, timestamp, signature)
+
+== Phase 2: Proactive Path Validation (PPV) ==
+S -> R1: Probe(path_ID, nonce, hop=1)
+R1 -> R1: tag = HMAC(K_r1, nonce || 0)
+R1 -> R2: Probe(path_ID, nonce, hop=2, tag=R1_tag)
+R2 -> R2: tag = HMAC(K_r2, nonce || R1_tag)
+R2 -> R3: Probe(path_ID, nonce, hop=3, tag=R2_tag)
+R3 -> R3: tag = HMAC(K_r3, nonce || R2_tag)
+R3 -> D: Probe(path_ID, nonce, final_tag=R3_tag)
+D -> D: verify_tag_chain()\ncheck path_ID in claim store
+
+alt Verification Success
+  D --> S: verify_ack(success, challenge_nonce)
+else Verification Failed
+  D --> S: verify_ack(fail, anomaly_type)
+  S -> ARE: trigger_anomaly_response()
+end
+
+== Phase 3: On-Path Continuous Verification (OPCV) ==
+S -> R1: data_pkt(seq=1)
+S -> R1: data_pkt(seq=2, token=true)
+R1 -> R1: update_sketch(path_ID, "R1", seq=2)
+R1 -> R2: data_pkt(seq=2, token=true)
+R2 -> R2: update_sketch(path_ID, "R2", seq=2)
+R2 -> R3: data_pkt(seq=2, token=true)
+R3 -> R3: update_sketch(path_ID, "R3", seq=2)
+R3 -> D: data_pkt(seq=2, token=true)
+D -> D: sample_sketch_entry()
+
+...
+
+D -> S: challenge(w=100..200, path_ID)
+S -> S: export_sketch(w=100..200, path_ID)
+S --> D: sketch_snapshot
+D -> D: compare_sketches(snapshot_src, snapshot_dst)
+
+alt Sketches Match
+  D --> S: challenge_ack(ok)
+else Deviation Detected
+  D --> S: challenge_ack(anomaly)
+  S -> ARE: trigger_anomaly_response()
+end
+
+@enduml
