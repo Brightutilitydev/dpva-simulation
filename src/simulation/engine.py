@@ -101,6 +101,11 @@ TOPOLOGY_TEMPLATES = {
         "links": [(i,i+1) for i in range(1,8)] + [(2,7)],
         "names": {i:f"N{i}" for i in range(1,9)},
     },
+    "campus": {
+        "nodes": 10,
+        "links": [(1,2),(2,3),(3,4),(4,5),(1,6),(6,7),(7,8),(8,9),(9,10),(3,8),(4,9)],
+        "names": {1:"Core-RTR", 2:"Dist-A", 3:"Access-1", 4:"Bldg-Switch", 5:"Dest", 6:"Dist-B", 7:"Access-2", 8:"Lab-Switch", 9:"Data-Ctr", 10:"Backup"},
+    },
 }
 
 

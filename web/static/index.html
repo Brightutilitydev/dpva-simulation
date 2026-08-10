@@ -38,6 +38,7 @@
             <option value="mesh">Mesh (6 nodes)</option>
             <option value="diamond">Diamond (5 nodes)</option>
             <option value="long">Long (8 nodes)</option>
+            <option value="campus">Campus Network (10 nodes)</option>
           </select>
           <div id="topo-info" class="topo-preview text-secondary small"></div>
 
@@ -175,7 +176,11 @@
 <div class="modal fade" id="bulk-modal" tabindex="-1">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
-      <div class="modal-header"><h5 class="modal-title">Bulk Results</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-header">
+        <h5 class="modal-title">Bulk Results</h5>
+        <button class="btn btn-sm btn-outline-success ms-auto me-3" onclick="downloadCSV()">Export to CSV</button>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
       <div class="modal-body" id="bulk-body">loading...</div>
     </div>
   </div>
@@ -185,6 +190,7 @@
 <script>
 let resultCache = null;
 let bulkModal = null;
+let lastBulkResults = null;
 
 function log(msg, cls = '') {
   const p = document.getElementById('log-pane');
@@ -352,6 +358,7 @@ async function runBulk() {
   try {
     const r = await fetch('/api/bulk?topology=' + document.getElementById('topo-select').value);
     const data = await r.json();
+    lastBulkResults = data.results; // Save for CSV export
     document.getElementById('status-badge').textContent = 'bulk done';
     log(`bulk complete: ${data.count} scenarios`);
 
@@ -382,6 +389,28 @@ function renderBulkTable(results) {
   }
   html += '</tbody></table>';
   return html;
+}
+
+// Function to download the data for Chapter 4 graphs/tables
+function downloadCSV() {
+  if (!lastBulkResults) return;
+  
+  let csv = "Scenario,Packets,PPV Status,OPCV Status,Detection Latency (ms),Verification Overhead (us),Packets Sent,Packets Received,Alerts Triggered\n";
+  
+  for (const r of lastBulkResults) {
+    csv += `"${r.label}",${r.packets},${r.ppv ? 'PASS' : 'BLOCK'},${r.opcv ? 'PASS' : 'ALERT'},${r.metrics.detection_latency_ms},${r.metrics.verification_overhead_us},${r.metrics.packets_sent},${r.metrics.packets_received},${r.metrics.alerts_triggered}\n`;
+  }
+  
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.setAttribute('href', url);
+  a.setAttribute('download', 'dpva_simulation_results.csv');
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  
+  log('downloaded CSV results data');
 }
 </script>
 </body>
